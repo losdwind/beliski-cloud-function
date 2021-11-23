@@ -1,14 +1,11 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-
+import * as user from "./User";
+import * as branch from "./Branch";
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
-//
-// export const helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
 
+admin.initializeApp();
 // type User = {
 //   id: String;
 //   email: String;
@@ -31,7 +28,7 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
     .collection("users")
     .doc(user.uid)
     .collection("privates")
-    .doc("private")
+    .doc("userPrivate")
     .set({
       id: user.uid,
       realName: "",
@@ -50,7 +47,7 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
     .collection("users")
     .doc(user.uid)
     .collection("privates")
-    .doc("subscribe")
+    .doc("userSubscription")
     .set({
       id: user.uid,
       likes: [],
@@ -71,7 +68,7 @@ export const onDeleteUser = functions.auth.user().onDelete(async (user) => {
     .collection("users")
     .doc(user.uid)
     .collection("privates")
-    .doc("private")
+    .doc("userPrivate")
     .delete();
 
   const subscribeInfo = admin
@@ -79,8 +76,13 @@ export const onDeleteUser = functions.auth.user().onDelete(async (user) => {
     .collection("users")
     .doc(user.uid)
     .collection("privates")
-    .doc("subscribe")
+    .doc("userSubscription")
     .delete();
 
   return Promise.all([userInfo, privateInfo, subscribeInfo]);
 });
+// TODO: add more export functions in separate files
+export const userFunctions = user;
+export const branchFunctions = branch;
+
+

@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
+
 export const onCreateBranch = functions.firestore
   .document("users/{userID}/branches/{branchID}")
   .onCreate(async (snapshot, context) => {
@@ -13,7 +14,8 @@ export const onCreateBranch = functions.firestore
       subs: 0,
       rating: 0,
     };
-    const newSnapshot = { ...snapshot, ...subscription };
+
+    const newSnapshot = {...snapshot, ...subscription};
     return snapshot.ref.set(newSnapshot);
   });
 
@@ -22,4 +24,9 @@ export const onUpdateBranch = functions.firestore
   .onUpdate(async (change, context) => {
     const newValue = change.after.data();
     const previousValue = change.after.data();
+
+    if (newValue == previousValue) {
+      return;
+    }
+    return change.after.ref.update(change);
   });
