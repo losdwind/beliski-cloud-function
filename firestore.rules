@@ -26,11 +26,11 @@ service cloud.firestore {
       allow read, write : if request.auth != null && request.auth.uid == userID
     }
 
-    match /user/{userID}/privates/{privateID} {
+    match /user/{userID}/privates/{privateID}/userPrivate/{privateID} {
       allow read, write : if request.auth != null && request.auth.uid == userID
     }
 
-    match /user/{userID}/usersubscribe/{subID} {
+    match /user/{userID}/privates/{privateID}/usersubscribe/{subID} {
       allow read: if request.auth != null && request.auth.uid == userID
     }
 
