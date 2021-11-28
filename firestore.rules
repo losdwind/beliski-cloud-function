@@ -58,8 +58,10 @@ service cloud.firestore {
 
       // allow open read and create in the comments
       match /comments/{commentID}{
-        allow read, create: if request.auth != null && get(/databases/$(database)/documents/users/$(userID)/branches/$(branchID)).data.openess == "Public";
+        allow read, create: if request.auth != null && get(/databases/$(database)/documents/users/$(userID)/branches/$(branchID)).data.openness == "Public";
       }
+
+
 
 
     }
