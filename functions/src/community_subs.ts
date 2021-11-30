@@ -1,10 +1,12 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
-export const onWriteLike = functions.firestore
+export const onWriteSub = functions.firestore
     .document("users/{userID}/branches/{branchID}/subs/{subID")
     .onCreate(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
+            // add file to the comments collection
+            transaction.create(snapshot.ref, snapshot);
             // increase the branch subs + 1
             const branchRef = admin.firestore()
                 .collection("users")
@@ -45,10 +47,12 @@ export const onWriteLike = functions.firestore
             // possibly using an aggregation function because the subs may go viral.
         });
     });
-export const onDeleteLike = functions.firestore
+export const onDeleteSub = functions.firestore
     .document("users/{userID}/branches/{branchID}/subs/{subID")
     .onDelete(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
+            // delete file from the sub collection
+            transaction.delete(snapshot.ref);
             // decrease the branch subs + 1
             const branchRef = admin.firestore()
                 .collection("users")

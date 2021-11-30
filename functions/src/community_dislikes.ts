@@ -5,6 +5,8 @@ export const onWriteDislike = functions.firestore
     .document("users/{userID}/branches/{branchID}/dislikes/{dislikeID")
     .onCreate(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
+            // add file to the dislikes collection
+            transaction.create(snapshot.ref, snapshot);
             // increase the branch dislikes + 1
             const branchRef = admin.firestore()
                 .collection("users")
@@ -49,6 +51,8 @@ export const onDeleteLike = functions.firestore
     .document("users/{userID}/branches/{branchID}/dislikes/{dislikeID")
     .onDelete(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
+            // delete file from dislikes collection
+            transaction.delete(snapshot.ref);
             // decrease the branch dislikes + 1
             const branchRef = admin.firestore()
                 .collection("users")
