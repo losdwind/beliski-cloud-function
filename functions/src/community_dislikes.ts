@@ -2,7 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
 export const onWriteDislike = functions.firestore
-    .document("users/{userID}/branches/{branchID}/dislikes/{likeID")
+    .document("users/{userID}/branches/{branchID}/dislikes/{dislikeID")
     .onCreate(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
             // increase the branch dislikes + 1
@@ -46,7 +46,7 @@ export const onWriteDislike = functions.firestore
         });
     });
 export const onDeleteLike = functions.firestore
-    .document("users/{userID}/branches/{branchID}/dislikes/{likeID")
+    .document("users/{userID}/branches/{branchID}/dislikes/{dislikeID")
     .onDelete(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
             // decrease the branch dislikes + 1
