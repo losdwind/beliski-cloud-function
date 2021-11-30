@@ -1,7 +1,8 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import * as users from "./User";
-import * as branches from "./Branch";
+import * as users from "./user";
+import * as branches from "./branch";
+import * as communityLikes from "./community_likes";
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
 
@@ -162,5 +163,5 @@ export const onDeleteUser = functions.auth.user().onDelete(async (user) => {
 // TODO: add more export functions in separate files
 export const userFunctions = users;
 export const branchFunctions = branches;
-
+export const communityLikesFunctions = communityLikes;
 
