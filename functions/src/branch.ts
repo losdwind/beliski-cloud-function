@@ -19,12 +19,12 @@ export const onCreateBranch = functions.firestore
     .onCreate(async (snapshot, context) => {
         // eslint-disable-next-line guard-for-in
         for (key in defaultSubscriptionInfo) {
-            snapshot.data()[key] = defaultSubscriptionInfo[key];
+            delete snapshot.data()[key];
         }
 
-        // const newSnapshot = {...snapshot, ...subscription};
+        const newSnapshot = {...snapshot, ...defaultSubscriptionInfo};
         // return snapshot.ref.set(snapshot);
-        return snapshot.ref.create(snapshot);
+        return snapshot.ref.create(newSnapshot);
     });
 
 
