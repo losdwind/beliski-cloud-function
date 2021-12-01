@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import {Counter} from "./distributed_counter";
 
 export const onWriteLike = functions.firestore
     .document("users/{userID}/branches/{branchID}/likes/{likeID")
@@ -13,12 +14,8 @@ export const onWriteLike = functions.firestore
                 .doc(snapshot.data().userID)
                 .collection("branches")
                 .doc(snapshot.data().branchID);
-            const branchDoc = await transaction.get(branchRef);
-            // eslint-disable-next-line no-throw-literal
-            if (!branchDoc.exists) throw "Document does not exist!";
-            const newLikes = branchDoc.data()?.likes + 1;
-            transaction.update(branchRef, {likes: newLikes});
-
+            const likes = new Counter(branchRef, "likes");
+            likes.incrementBy(1);
             // increase the userGivenSubs + 1
             const userGivenSubsRef = admin.firestore()
                 .collection("users")
@@ -59,11 +56,9 @@ export const onDeleteLike = functions.firestore
                 .doc(snapshot.data().userID)
                 .collection("branches")
                 .doc(snapshot.data().branchID);
-            const branchDoc = await transaction.get(branchRef);
-            // eslint-disable-next-line no-throw-literal
-            if (!branchDoc.exists) throw "Document does not exist!";
-            const newLikes = branchDoc.data()?.likes - 1;
-            transaction.update(branchRef, {likes: newLikes});
+            // increase the branch likes + 1
+            const likes = new Counter(branchRef, "likes");
+            likes.incrementBy(-1);
 
             // decrease the userGivenSubs - 1
             const userGivenSubsRef = admin.firestore()
