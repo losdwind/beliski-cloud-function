@@ -47,7 +47,7 @@ export const onWriteDislike = functions.firestore
             // possibly using an aggregation function because the dislikes may go viral.
         });
     });
-export const onDeleteLike = functions.firestore
+export const onDeleteDislike = functions.firestore
     .document("users/{userID}/branches/{branchID}/dislikes/{dislikeID")
     .onDelete(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
