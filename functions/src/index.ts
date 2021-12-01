@@ -3,6 +3,8 @@ import * as admin from "firebase-admin";
 import * as users from "./user";
 import * as branches from "./branch";
 import * as communityLikes from "./community_likes";
+import * as communityDislikes from "./community_dislikes";
+import * as communitySubs from "./community_subs";
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
 
@@ -84,7 +86,7 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
         .firestore()
         .collection("users")
         .doc(user.uid)
-        .set(newUser);
+        .create(newUser);
 
 
     const privateInfo = admin
@@ -93,7 +95,7 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
         .doc(user.uid)
         .collection("privates")
         .doc("userPrivates")
-        .set({
+        .create({
             id: user.uid,
         });
 
@@ -103,7 +105,7 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
         .doc(user.uid)
         .collection("privates")
         .doc("userGivenSubs")
-        .set(userGivenSubs);
+        .create(userGivenSubs);
 
     const outgoingSubsList = admin
         .firestore()
@@ -111,7 +113,7 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
         .doc(user.uid)
         .collection("privates")
         .doc("userGivenSubsList")
-        .set(userGivenSubsList);
+        .create(userGivenSubsList);
 
     const ingoingSubs = admin
         .firestore()
@@ -119,10 +121,10 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
         .doc(user.uid)
         .collection("privates")
         .doc("userReceivedSubs")
-        .set(userReceivedSubs);
+        .create(userReceivedSubs);
 
     // eslint-disable-next-line max-len
-    return Promise.all([userInfo, privateInfo, outgoingSubs, outgoingSubsList, ingoingSubs]);
+    return Promise.all([userInfo, privateInfo, outgoingSubs, outgoingSubsList, ingoingSubs]).catch((err) => console.log(err));
 });
 
 // TODO: check the requirement of deleting a user
@@ -158,10 +160,11 @@ export const onDeleteUser = functions.auth.user().onDelete(async (user) => {
         .delete();
 
     // eslint-disable-next-line max-len
-    return Promise.all([userInfo, privateInfo, subscribeInfo, subscribeInfoList]);
+    return Promise.all([userInfo, privateInfo, subscribeInfo, subscribeInfoList]).catch((err) => console.log(err));
 });
 // TODO: add more export functions in separate files
 export const userFunctions = users;
 export const branchFunctions = branches;
 export const communityLikesFunctions = communityLikes;
-
+export const communityDislikesFunctions = communityDislikes;
+export const communitySubsFunctions = communitySubs;
