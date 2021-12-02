@@ -81,7 +81,6 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
         shares: [],
         subs: [],
     };
-
     const userInfo = admin
         .firestore()
         .collection("users")
@@ -127,41 +126,12 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
     return Promise.all([userInfo, privateInfo, outgoingSubs, outgoingSubsList, ingoingSubs]).catch((err) => console.log(err));
 });
 
-// TODO: check the requirement of deleting a user
-export const onDeleteUser = functions.auth.user().onDelete(async (user) => {
-    const userInfo = admin
-        .firestore()
-        .collection("users")
-        .doc(user.uid)
-        .delete();
-
-    const privateInfo = admin
-        .firestore()
-        .collection("users")
-        .doc(user.uid)
-        .collection("privates")
-        .doc("userPrivates")
-        .delete();
-
-    const subscribeInfo = admin
-        .firestore()
-        .collection("users")
-        .doc(user.uid)
-        .collection("privates")
-        .doc("userGivenSubs")
-        .delete();
-
-    const subscribeInfoList = admin
-        .firestore()
-        .collection("users")
-        .doc(user.uid)
-        .collection("privates")
-        .doc("userGivenSubsList")
-        .delete();
-
-    // eslint-disable-next-line max-len
-    return Promise.all([userInfo, privateInfo, subscribeInfo, subscribeInfoList]).catch((err) => console.log(err));
-});
+// // TODO: check the requirement of deleting a user
+// export const onDeleteUser = functions.auth.user().onDelete(async (user) => {
+//     const docRef = admin.firestore().collection("users").doc(user.uid);
+//     return admin.firestore().recursiveDelete(docRef).catch((err) => console.log(err));
+//     // TODO: handle the delete case when user have open branches and have other members.
+// });
 // TODO: add more export functions in separate files
 export const userFunctions = users;
 export const branchFunctions = branches;
