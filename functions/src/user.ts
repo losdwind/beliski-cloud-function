@@ -6,7 +6,6 @@ export const onUpdateUser = functions.firestore
         const newValue = change.after.data();
         const previousValue = change.before.data();
         if (newValue === previousValue) return;
-
         if (context.auth?.uid == previousValue.id) {
             // only allow change of the profile Image and nickName
             return change.after.ref.update({
