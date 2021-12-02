@@ -19,6 +19,7 @@ module.exports = {
   },
   ignorePatterns: [
     "/lib/**/*", // Ignore built files.
+    "/src/distributed_counter.js",
   ],
   plugins: [
     "@typescript-eslint",
