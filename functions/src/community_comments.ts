@@ -5,8 +5,6 @@ export const onWriteComment = functions.firestore
     .document("users/{userID}/branches/{branchID}/comments/{commentID")
     .onCreate(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
-            // add file to the comments collection
-            transaction.create(snapshot.ref, snapshot);
             // increase the branch comments + 1
             const branchRef = admin.firestore()
                 .collection("users")

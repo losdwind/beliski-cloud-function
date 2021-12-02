@@ -5,8 +5,6 @@ export const onWriteSub = functions.firestore
     .document("users/{userID}/branches/{branchID}/subs/{subID")
     .onCreate(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
-            // add file to the comments collection
-            transaction.create(snapshot.ref, snapshot);
             // increase the branch subs + 1
             const branchRef = admin.firestore()
                 .collection("users")
@@ -51,8 +49,6 @@ export const onDeleteSub = functions.firestore
     .document("users/{userID}/branches/{branchID}/subs/{subID")
     .onDelete(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
-            // delete file from the sub collection
-            transaction.delete(snapshot.ref);
             // decrease the branch subs + 1
             const branchRef = admin.firestore()
                 .collection("users")
