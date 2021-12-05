@@ -55,6 +55,7 @@ service cloud.firestore {
             // allow open read and create in the comments
             match /comments/{commentID} {
                 allow read, create: if request.auth != null && get(/databases/$(database)/documents/users/$(userID)/branches/$(branchID)).data.openness == "Public";
+                allow delete: if request.auth != null && request.auth.uid == request.resource.data.userID;
             }
 
             match /likes/{likeID} {
