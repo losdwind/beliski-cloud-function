@@ -30,7 +30,7 @@ type UserGiven = {
 type UserReceived = {
     id: string,
     likes: number,
-    disLikes: number,
+    dislikes: number,
     comments: number,
     shares: number,
     subs: number,
@@ -39,7 +39,7 @@ type UserReceived = {
 type UserGivenList = {
     id: string,
     likes: string[],
-    disLikes: string[],
+    dislikes: string[],
     comments: string[],
     shares: string[],
     subs: string[],
@@ -58,7 +58,7 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
     const userGivenSubs: UserGiven = {
         id: user.uid,
         likes: 0,
-        disLikes: 0,
+        dislikes: 0,
         comments: 0,
         shares: 0,
         subs: 0,
@@ -67,7 +67,7 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
     const userReceivedSubs: UserReceived = {
         id: user.uid,
         likes: 0,
-        disLikes: 0,
+        dislikes: 0,
         comments: 0,
         shares: 0,
         subs: 0,
@@ -76,7 +76,7 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
     const userGivenSubsList: UserGivenList = {
         id: user.uid,
         likes: [],
-        disLikes: [],
+        dislikes: [],
         comments: [],
         shares: [],
         subs: [],
