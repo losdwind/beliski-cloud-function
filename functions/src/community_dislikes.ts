@@ -1,92 +1,92 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import FieldValue = admin.firestore.FieldValue;
+import {Counter} from "./distributed_counter";
 
 export const onWriteDislike = functions.firestore
-    .document("users/{userID}/branches/{branchID}/dislikes/{dislikeID")
+    .document("users/{userID}/branches/{branchID}/dislikes/{dislikeID}")
     .onCreate(async (snapshot, context) => {
-        // increase the branch dislikes + 1
-        const newBranchDislikes = admin.firestore()
-            .collection("users")
-            .doc(snapshot.data().userID)
-            .collection("branches")
-            .doc(snapshot.data().branchID)
-            .update({dislikes: FieldValue.increment(1)});
-
-
-        // increase the userGivenDislikes + 1
-        const newUserGivenDislikes = admin.firestore()
-            .collection("users")
-            .doc(snapshot.data().userID)
-            .collection("privates")
-            .doc("userGivenSubs")
-            .update({dislikes: FieldValue.increment(1)});
-
-        try {
-            const oldDislikesListDoc = await admin.firestore()
+        return admin.firestore().runTransaction(async (transaction) => {
+            // increase the branch dislikes + 1
+            const branchRef = admin.firestore()
+                .collection("users")
+                .doc(snapshot.data().userID)
+                .collection("branches")
+                .doc(snapshot.data().branchID);
+            const dislikes = new Counter(branchRef, "dislikes");
+            dislikes.incrementBy(1);
+            // increase the userGivenSubs + 1
+            const userGivenSubsRef = admin.firestore()
                 .collection("users")
                 .doc(snapshot.data().userID)
                 .collection("privates")
-                .doc("userGivenSubsList").get();
-            const oldDislikesList = oldDislikesListDoc.data()?.dislikes;
-            const newDislikeList = new Array(new Set([...oldDislikesList, snapshot.data().userID]));
-            const newUserGivenDislikesList = admin.firestore()
+                .doc("userGivenSubs");
+            const userGivenSubsDoc = await transaction.get(userGivenSubsRef);
+            // eslint-disable-next-line no-throw-literal
+            if (!userGivenSubsDoc.exists) console.log("Document does not exist!");
+            const newUserDislikes = userGivenSubsDoc.data()?.dislikes + 1;
+
+            // add the branchID to userGivenSubs collection
+            const userGivenSubsListRef = admin.firestore()
                 .collection("users")
                 .doc(snapshot.data().userID)
                 .collection("privates")
-                .doc("userGivenSubsList")
-                .update({dislikes: newDislikeList});
-            return Promise.all([newBranchDislikes, newUserGivenDislikes, newUserGivenDislikesList]);
-        } catch (e) {
-            console.log(e);
+                .doc("userGivenSubsList");
+            const userGivenSubsListDoc = await transaction.get(userGivenSubsListRef);
+            // eslint-disable-next-line no-throw-literal
+            if (!userGivenSubsListDoc.exists) console.log("Document does not exist!");
+            console.log(userGivenSubsListDoc.data());
+            console.log(userGivenSubsListDoc.data()?.dislikes);
+            const newUserListDislikes = Array.from(new Set([...userGivenSubsListDoc.data()?.dislikes, snapshot.data().branchID]));
+            transaction.update(userGivenSubsRef, {dislikes: newUserDislikes});
+            transaction.update(userGivenSubsListRef, {dislikes: newUserListDislikes});
+
+            // TODO: handle the new dislikes affect the user received Subs to all branch members,
+            // possibly using an aggregation function because the dislikes may go viral.
             return;
-        }
+        });
     });
 
 export const onDeleteDislike = functions.firestore
-    .document("users/{userID}/branches/{branchID}/dislikes/{dislikeID")
+    .document("users/{userID}/branches/{branchID}/dislikes/{dislikeID}")
     .onDelete(async (snapshot, context) => {
-        // increase the branch dislikes - 1
-        const newBranchDislikes = admin.firestore()
-            .collection("users")
-            .doc(snapshot.data().userID)
-            .collection("branches")
-            .doc(snapshot.data().branchID)
-            .update({dislikes: FieldValue.increment(-1)});
+        return admin.firestore().runTransaction(async (transaction) => {
+            // decrease the branch dislikes  1
+            const branchRef = admin.firestore()
+                .collection("users")
+                .doc(snapshot.data().userID)
+                .collection("branches")
+                .doc(snapshot.data().branchID);
+            const dislikes = new Counter(branchRef, "dislikes");
+            dislikes.incrementBy(-1);
 
-
-        // increase the userGivenDislikes - 1
-        const newUserGivenDislikes = admin.firestore()
-            .collection("users")
-            .doc(snapshot.data().userID)
-            .collection("privates")
-            .doc("userGivenSubs")
-            .update({dislikes: FieldValue.increment(-1)});
-
-        try {
-            const oldDislikesListDoc = await admin.firestore()
+            // decrease the userGivenSubs  1
+            const userGivenSubsRef = admin.firestore()
                 .collection("users")
                 .doc(snapshot.data().userID)
                 .collection("privates")
-                .doc("userGivenSubsList").get();
-            const oldDislikesList = oldDislikesListDoc.data()?.dislikes;
+                .doc("userGivenSubs");
+            const userGivenSubsDoc = await transaction.get(userGivenSubsRef);
+            // eslint-disable-next-line no-throw-literal
+            if (!userGivenSubsDoc.exists) console.log("Document does not exist!");
+            const newUserDislikes = userGivenSubsDoc.data()?.dislikes - 1;
+
+            // remove the branchID from userGivenSubsList collection
+            const userGivenSubsListRef = admin.firestore()
+                .collection("users")
+                .doc(snapshot.data().userID)
+                .collection("privates")
+                .doc("userGivenSubsList");
+            const userGivenSubsListDoc = await transaction.get(userGivenSubsListRef);
+            // eslint-disable-next-line no-throw-literal
+            if (!userGivenSubsListDoc.exists) console.log("Document does not exist!");
             // the line below will create new list which may remove implicit dependency
-            const newDislikeList = oldDislikesList.data()?.dislikes
-                .filter((key: string) => key != snapshot.data().userID);
-            // const index = userGivenSubsListDoc.data()?
-            // .findIndex((item: any) => item == snapshot.data().userID);
-            // if (index > -1) {
-            //     userGivenSubsListDoc.data()?.splice(index, 1);
-            // }
-            const newUserGivenDislikesList = admin.firestore()
-                .collection("users")
-                .doc(snapshot.data().userID)
-                .collection("privates")
-                .doc("userGivenSubsList")
-                .update({dislikes: newDislikeList});
-            return Promise.all([newBranchDislikes, newUserGivenDislikes, newUserGivenDislikesList]);
-        } catch (e) {
-            console.log(e);
+            const newUserListDislikes = userGivenSubsListDoc.data()?.dislikes
+                .filter((key: string) => key != snapshot.data().branchID);
+            transaction.update(userGivenSubsRef, {dislikes: newUserDislikes});
+            transaction.update(userGivenSubsListRef, {dislikes: newUserListDislikes});
+
+            // TODO: handle the new dislikes affect the user received Subs to all branch members,
+            // possibly using an aggregation function because the dislikes may go viral.
             return;
-        }
+        });
     });

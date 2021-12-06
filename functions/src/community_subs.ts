@@ -1,8 +1,9 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import {Counter} from "./distributed_counter";
 
 export const onWriteSub = functions.firestore
-    .document("users/{userID}/branches/{branchID}/subs/{subID")
+    .document("users/{userID}/branches/{branchID}/subs/{subID}")
     .onCreate(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
             // increase the branch subs + 1
@@ -11,11 +12,9 @@ export const onWriteSub = functions.firestore
                 .doc(snapshot.data().userID)
                 .collection("branches")
                 .doc(snapshot.data().branchID);
-            const branchDoc = await transaction.get(branchRef);
-            // eslint-disable-next-line no-throw-literal
-            if (!branchDoc.exists) throw "Document does not exist!";
-            const newSubs = branchDoc.data()?.subs + 1;
-            transaction.update(branchRef, {subs: newSubs});
+
+            const subs = new Counter(branchRef, "subs");
+            subs.incrementBy(1);
 
             // increase the userGivenSubs + 1
             const userGivenSubsRef = admin.firestore()
@@ -27,7 +26,6 @@ export const onWriteSub = functions.firestore
             // eslint-disable-next-line no-throw-literal
             if (!userGivenSubsDoc.exists) throw "Document does not exist!";
             const newUserSubs = userGivenSubsDoc.data()?.subs + 1;
-            transaction.update(userGivenSubsRef, {subs: newUserSubs});
 
             // add the branchID to userGivenSubs collection
             const userGivenSubsListRef = admin.firestore()
@@ -38,15 +36,16 @@ export const onWriteSub = functions.firestore
             const userGivenSubsListDoc = await transaction.get(userGivenSubsListRef);
             // eslint-disable-next-line no-throw-literal
             if (!userGivenSubsListDoc.exists) throw "Document does not exist!";
-            const newUserListSubs = new Array(new Set([...userGivenSubsListDoc.data()?.subs, snapshot.data().userID]));
-            transaction.update(userGivenSubsRef, {subs: newUserListSubs});
+            const newUserListSubs = Array.from(new Set([...userGivenSubsListDoc.data()?.subs, snapshot.data().branchID]));
+            transaction.update(userGivenSubsRef, {subs: newUserSubs});
+            transaction.update(userGivenSubsListRef, {subs: newUserListSubs});
 
             // TODO: handle the new subs affect the user received Subs to all branch members,
             // possibly using an aggregation function because the subs may go viral.
         });
     });
 export const onDeleteSub = functions.firestore
-    .document("users/{userID}/branches/{branchID}/subs/{subID")
+    .document("users/{userID}/branches/{branchID}/subs/{subID}")
     .onDelete(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
             // decrease the branch subs + 1
@@ -55,11 +54,8 @@ export const onDeleteSub = functions.firestore
                 .doc(snapshot.data().userID)
                 .collection("branches")
                 .doc(snapshot.data().branchID);
-            const branchDoc = await transaction.get(branchRef);
-            // eslint-disable-next-line no-throw-literal
-            if (!branchDoc.exists) throw "Document does not exist!";
-            const newSubs = branchDoc.data()?.subs - 1;
-            transaction.update(branchRef, {subs: newSubs});
+            const subs = new Counter(branchRef, "subs");
+            subs.incrementBy(-1);
 
             // decrease the userGivenSubs - 1
             const userGivenSubsRef = admin.firestore()
@@ -71,7 +67,6 @@ export const onDeleteSub = functions.firestore
             // eslint-disable-next-line no-throw-literal
             if (!userGivenSubsDoc.exists) throw "Document does not exist!";
             const newUserSubs = userGivenSubsDoc.data()?.subs + 1;
-            transaction.update(userGivenSubsRef, {subs: newUserSubs});
 
             // remove the branchID from userGivenSubsList collection
             const userGivenSubsListRef = admin.firestore()
@@ -81,16 +76,12 @@ export const onDeleteSub = functions.firestore
                 .doc("userGivenSubsList");
             const userGivenSubsListDoc = await transaction.get(userGivenSubsListRef);
             // eslint-disable-next-line no-throw-literal
-            if (!userGivenSubsListDoc.exists) throw "Document does not exist!";
+            if (!userGivenSubsListDoc.exists) console.log("Document does not exist!");
             // the line below will create new list which may remove implicit dependency
             const newUserListSubs = userGivenSubsListDoc.data()?.subs
-                .filter((key: string) => key != snapshot.data().userID);
-            // const index = userGivenSubsListDoc.data()?
-            // .findIndex((item: any) => item == snapshot.data().userID);
-            // if (index > -1) {
-            //     userGivenSubsListDoc.data()?.splice(index, 1);
-            // }
-            transaction.update(userGivenSubsRef, {subs: newUserListSubs});
+                .filter((key: string) => key != snapshot.data().branchID);
+            transaction.update(userGivenSubsRef, {subs: newUserSubs});
+            transaction.update(userGivenSubsListRef, {subs: newUserListSubs});
 
             // TODO: handle the new subs affect the user received Subs to all branch members,
             // possibly using an aggregation function because the subs may go viral.

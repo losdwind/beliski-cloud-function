@@ -5,6 +5,7 @@ import * as branches from "./branch";
 import * as communityLikes from "./community_likes";
 import * as communityDislikes from "./community_dislikes";
 import * as communitySubs from "./community_subs";
+import * as linkedItems from "./linked_items";
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
 
@@ -138,3 +139,4 @@ export const branchFunctions = branches;
 export const communityLikesFunctions = communityLikes;
 export const communityDislikesFunctions = communityDislikes;
 export const communitySubsFunctions = communitySubs;
+export const linkedItemsFunctions = linkedItems;

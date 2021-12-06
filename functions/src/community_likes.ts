@@ -3,7 +3,7 @@ import * as admin from "firebase-admin";
 import {Counter} from "./distributed_counter";
 
 export const onWriteLike = functions.firestore
-    .document("users/{userID}/branches/{branchID}/likes/{likeID")
+    .document("users/{userID}/branches/{branchID}/likes/{likeID}")
     .onCreate(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
             // increase the branch likes + 1
@@ -22,9 +22,8 @@ export const onWriteLike = functions.firestore
                 .doc("userGivenSubs");
             const userGivenSubsDoc = await transaction.get(userGivenSubsRef);
             // eslint-disable-next-line no-throw-literal
-            if (!userGivenSubsDoc.exists) throw "Document does not exist!";
+            if (!userGivenSubsDoc.exists) console.log("Document does not exist!");
             const newUserLikes = userGivenSubsDoc.data()?.likes + 1;
-            transaction.update(userGivenSubsRef, {likes: newUserLikes});
 
             // add the branchID to userGivenSubs collection
             const userGivenSubsListRef = admin.firestore()
@@ -34,9 +33,12 @@ export const onWriteLike = functions.firestore
                 .doc("userGivenSubsList");
             const userGivenSubsListDoc = await transaction.get(userGivenSubsListRef);
             // eslint-disable-next-line no-throw-literal
-            if (!userGivenSubsListDoc.exists) throw "Document does not exist!";
-            const newUserListLikes = new Array(new Set([...userGivenSubsListDoc.data()?.likes, snapshot.data().userID]));
-            transaction.update(userGivenSubsRef, {likes: newUserListLikes});
+            if (!userGivenSubsListDoc.exists) console.log("Document does not exist!");
+            console.log(userGivenSubsListDoc.data());
+            console.log(userGivenSubsListDoc.data()?.likes);
+            const newUserListLikes = Array.from(new Set([...userGivenSubsListDoc.data()?.likes, snapshot.data().branchID]));
+            transaction.update(userGivenSubsRef, {likes: newUserLikes});
+            transaction.update(userGivenSubsListRef, {likes: newUserListLikes});
 
             // TODO: handle the new likes affect the user received Subs to all branch members,
             // possibly using an aggregation function because the likes may go viral.
@@ -44,7 +46,7 @@ export const onWriteLike = functions.firestore
         });
     });
 export const onDeleteLike = functions.firestore
-    .document("users/{userID}/branches/{branchID}/likes/{likeID")
+    .document("users/{userID}/branches/{branchID}/likes/{likeID}")
     .onDelete(async (snapshot, context) => {
         return admin.firestore().runTransaction(async (transaction) => {
             // decrease the branch likes + 1
@@ -65,9 +67,8 @@ export const onDeleteLike = functions.firestore
                 .doc("userGivenSubs");
             const userGivenSubsDoc = await transaction.get(userGivenSubsRef);
             // eslint-disable-next-line no-throw-literal
-            if (!userGivenSubsDoc.exists) throw "Document does not exist!";
-            const newUserLikes = userGivenSubsDoc.data()?.likes + 1;
-            transaction.update(userGivenSubsRef, {likes: newUserLikes});
+            if (!userGivenSubsDoc.exists) console.log("Document does not exist!");
+            const newUserLikes = userGivenSubsDoc.data()?.likes - 1;
 
             // remove the branchID from userGivenSubsList collection
             const userGivenSubsListRef = admin.firestore()
@@ -77,19 +78,16 @@ export const onDeleteLike = functions.firestore
                 .doc("userGivenSubsList");
             const userGivenSubsListDoc = await transaction.get(userGivenSubsListRef);
             // eslint-disable-next-line no-throw-literal
-            if (!userGivenSubsListDoc.exists) throw "Document does not exist!";
+            if (!userGivenSubsListDoc.exists) console.log("Document does not exist!");
             // the line below will create new list which may remove implicit dependency
             const newUserListLikes = userGivenSubsListDoc.data()?.likes
-                .filter((key: string) => key != snapshot.data().userID);
-            // const index = userGivenSubsListDoc.data()?
-            // .findIndex((item: any) => item == snapshot.data().userID);
-            // if (index > -1) {
-            //     userGivenSubsListDoc.data()?.splice(index, 1);
-            // }
-            transaction.update(userGivenSubsRef, {likes: newUserListLikes});
+                .filter((key: string) => key != snapshot.data().branchID);
+            transaction.update(userGivenSubsRef, {likes: newUserLikes});
+            transaction.update(userGivenSubsListRef, {likes: newUserListLikes});
 
             // TODO: handle the new likes affect the user received Subs to all branch members,
             // possibly using an aggregation function because the likes may go viral.
+            return;
         });
     });
 
