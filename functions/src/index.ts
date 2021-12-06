@@ -21,7 +21,7 @@ type User = {
 type UserGiven = {
     id: string,
     likes: number,
-    disLikes: number,
+    dislikes: number,
     comments: number,
     shares: number,
     subs: number,
