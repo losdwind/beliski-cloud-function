@@ -2,10 +2,11 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as users from "./user";
 import * as branches from "./branch";
-import * as communityLikes from "./community_likes";
-import * as communityDislikes from "./community_dislikes";
-import * as communitySubs from "./community_subs";
+// import * as communityLikes from "./community_likes";
+// import * as communityDislikes from "./community_dislikes";
+// import * as communitySubs from "./community_subs";
 import * as linkedItems from "./linked_items";
+import * as communityAction from "./community_actions";
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
 
@@ -136,7 +137,8 @@ export const onCreateUser = functions.auth.user().onCreate(async (user) => {
 // TODO: add more export functions in separate files
 export const userFunctions = users;
 export const branchFunctions = branches;
-export const communityLikesFunctions = communityLikes;
-export const communityDislikesFunctions = communityDislikes;
-export const communitySubsFunctions = communitySubs;
+// export const communityLikesFunctions = communityLikes;
+// export const communityDislikesFunctions = communityDislikes;
+// export const communitySubsFunctions = communitySubs;
 export const linkedItemsFunctions = linkedItems;
+export const communityActionFunctions = communityAction;
