@@ -54,6 +54,11 @@ export const onCallAction = functions.https.onCall(async (data, context) => {
             .doc(senderID)
             .collection("privates")
             .doc("userGivenSubsList");
+        const userReceivedSubsRef = admin.firestore()
+            .collection("users")
+            .doc(receiverID)
+            .collection("privates")
+            .doc("userReceivedSubs");
         // check if the likes/dislikes/subs has already exist in database
         // if exist, delete
         // if not exist, add
@@ -63,6 +68,8 @@ export const onCallAction = functions.https.onCall(async (data, context) => {
         if (!actionDoc.exists) {
             const property = new Counter(branchRef, field);
             property.incrementBy(1);
+            const receiverProperty = new Counter(userReceivedSubsRef, field);
+            receiverProperty.incrementBy(1);
             const userGivenSubsDocObject = userGivenSubsDoc.data()!;
             const newValue = userGivenSubsDocObject[field] + 1;
             const userGivenSubsListDocObject = userGivenSubsListDoc.data()!;
@@ -75,6 +82,8 @@ export const onCallAction = functions.https.onCall(async (data, context) => {
         } else {
             const property = new Counter(branchRef, field);
             property.incrementBy(-1);
+            const receiverProperty = new Counter(userReceivedSubsRef, field);
+            receiverProperty.incrementBy(-1);
             const userGivenSubsDocObject = userGivenSubsDoc.data()!;
             const newValue = userGivenSubsDocObject[field] - 1;
             const userGivenSubsListDocObject = userGivenSubsListDoc.data()!;
